@@ -1,0 +1,312 @@
+body {
+  background: #f4f6f8;
+}
+
+body .min-h-screen.bg-secondary {
+  background:
+    linear-gradient(180deg, rgba(238, 77, 45, 0.05), rgba(244, 246, 248, 0) 230px),
+    #f4f6f8;
+}
+
+header.sticky {
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #e7ebf0;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+  backdrop-filter: blur(12px);
+}
+
+header.sticky > div,
+main.mx-auto {
+  max-width: 720px !important;
+}
+
+header.sticky img[alt="Shopee"] {
+  height: 36px;
+}
+
+header.sticky .text-success {
+  color: #127c55;
+  background: #eefaf5;
+  border: 1px solid #d8f1e7;
+  border-radius: 999px;
+  padding: 7px 10px;
+}
+
+.bg-urgency {
+  background: #ee4d2d !important;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.bg-urgency > div {
+  max-width: 720px !important;
+  font-size: 12px !important;
+  letter-spacing: 0.01em;
+}
+
+main > div:first-child {
+  padding-top: 14px;
+}
+
+main > div:first-child img {
+  border-radius: 8px !important;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 36px -28px rgba(15, 23, 42, 0.7) !important;
+}
+
+main section > .bg-card,
+main section > div.rounded-md,
+main section > div.rounded-lg,
+main section button.bg-card,
+main section .grid > div.bg-card {
+  border: 1px solid #e5e9ef !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  box-shadow: 0 10px 28px -22px rgba(15, 23, 42, 0.55) !important;
+}
+
+main > section:first-of-type > div {
+  position: relative;
+  padding: 18px !important;
+}
+
+main > section:first-of-type > div::before {
+  content: "Resumo do pedido";
+  display: block;
+  margin-bottom: 13px;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+main > section:first-of-type img[alt="Produto"] {
+  width: 92px !important;
+  height: 92px !important;
+  border: 1px solid #eef1f5;
+  border-radius: 8px !important;
+  background: #f7f8fa;
+}
+
+main > section:first-of-type h3 {
+  color: #151a23;
+  font-size: 15px !important;
+  line-height: 1.35;
+}
+
+main > section:first-of-type .text-primary {
+  color: #ee4d2d !important;
+}
+
+main > section:first-of-type .line-through {
+  color: #8b95a5 !important;
+}
+
+main > section:first-of-type .border-t {
+  border-top-color: #edf0f4 !important;
+}
+
+main > section:first-of-type .pt-2 {
+  border-top: 1px dashed #d9dee7;
+  margin-top: 8px;
+  padding-top: 12px !important;
+}
+
+main > section:nth-of-type(2) {
+  padding: 13px 18px 14px !important;
+  border-color: #e5e9ef !important;
+  background: #fff !important;
+  box-shadow: 0 10px 28px -22px rgba(15, 23, 42, 0.55) !important;
+}
+
+main > section:nth-of-type(2) .h-1 {
+  height: 6px !important;
+  background: #eef1f5 !important;
+}
+
+main > section:nth-of-type(2) .bg-primary {
+  background: #ee4d2d !important;
+}
+
+main > section:nth-of-type(2) .text-primary {
+  color: #ee4d2d !important;
+}
+
+main > section:nth-of-type(2) .border-primary {
+  border-color: #ee4d2d !important;
+}
+
+main h2 {
+  color: #1f2937 !important;
+  letter-spacing: 0.08em !important;
+}
+
+main label {
+  color: #293241 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+main input,
+main select,
+main textarea,
+#pagou-card-element {
+  border: 1px solid #d9dee7 !important;
+  border-radius: 7px !important;
+  background-color: #fbfcfd !important;
+  color: #151a23 !important;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02);
+}
+
+main input:hover,
+main select:hover,
+main textarea:hover,
+#pagou-card-element:hover {
+  border-color: #c7ced9 !important;
+}
+
+main input:focus,
+main select:focus,
+main textarea:focus,
+#pagou-card-element:focus-within {
+  border-color: #ee4d2d !important;
+  background-color: #fff !important;
+  box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.12) !important;
+}
+
+main input::placeholder,
+main textarea::placeholder {
+  color: #99a1af !important;
+}
+
+main section:nth-of-type(3) > div > div,
+main section:nth-of-type(3) > div > div > div {
+  border-radius: 8px !important;
+}
+
+main section:nth-of-type(3) .bg-primary,
+main section:nth-of-type(4) .bg-primary,
+main section:nth-of-type(5) .bg-primary {
+  background-color: #ee4d2d !important;
+}
+
+main section:nth-of-type(3) .text-primary,
+main section:nth-of-type(4) .text-primary,
+main section:nth-of-type(5) .text-primary,
+main section:nth-of-type(6) .text-primary {
+  color: #ee4d2d !important;
+}
+
+main section:nth-of-type(4) h2,
+main section:nth-of-type(5) h2 {
+  margin-bottom: 10px !important;
+}
+
+main section:nth-of-type(4) button,
+main section:nth-of-type(5) button {
+  min-height: 76px;
+}
+
+main section:nth-of-type(5) img[alt="Cartão de crédito"] {
+  height: 31px !important;
+  width: auto !important;
+}
+
+main section:nth-of-type(5) img[alt="PIX"] {
+  height: 30px !important;
+  width: auto !important;
+}
+
+main section:nth-of-type(4) button.border-primary,
+main section:nth-of-type(5) button.border-primary {
+  border-color: #ee4d2d !important;
+  background: #fff8f5 !important;
+  box-shadow:
+    0 0 0 1px rgba(238, 77, 45, 0.08),
+    0 12px 28px -22px rgba(15, 23, 42, 0.55) !important;
+}
+
+main section:nth-of-type(4) .text-success,
+header .text-success {
+  color: #109766 !important;
+}
+
+main section:nth-of-type(5) > p {
+  margin-top: 12px !important;
+  color: #667085 !important;
+  font-weight: 600;
+}
+
+main section:nth-of-type(5) > button:last-of-type {
+  height: 58px !important;
+  min-height: 58px !important;
+  border-radius: 8px !important;
+  background: #06c981 !important;
+  color: #fff !important;
+  box-shadow: 0 18px 34px -20px rgba(6, 201, 129, 0.85) !important;
+}
+
+main section:nth-of-type(5) > button:last-of-type:hover {
+  filter: brightness(1.02);
+}
+
+main section:nth-of-type(5) > button:last-of-type:active {
+  transform: translateY(1px);
+}
+
+main section:nth-of-type(6) .grid > div {
+  min-height: 86px;
+  border-color: #e8ecf2 !important;
+}
+
+main footer {
+  color: #6b7280;
+}
+
+main footer a {
+  color: #667085 !important;
+}
+
+.fixed.inset-0.z-50 > div {
+  border-radius: 8px !important;
+  border: 1px solid #e5e9ef;
+  box-shadow: 0 24px 64px -20px rgba(0, 0, 0, 0.38) !important;
+}
+
+.fixed.inset-0.z-50 textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@media (max-width: 640px) {
+  header.sticky > div {
+    padding: 10px 14px !important;
+  }
+
+  header.sticky img[alt="Shopee"] {
+    height: 32px;
+  }
+
+  header.sticky .text-success {
+    padding: 6px 8px;
+  }
+
+  main section {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  main > section:nth-of-type(2) {
+    margin-left: 14px !important;
+    margin-right: 14px !important;
+  }
+
+  main > section:first-of-type img[alt="Produto"] {
+    width: 84px !important;
+    height: 84px !important;
+  }
+
+  main section:nth-of-type(4) button,
+  main section:nth-of-type(5) button {
+    min-height: 72px;
+  }
+}
