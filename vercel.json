@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/checkout",
+      "destination": "/checkout/index.html"
+    },
+    {
+      "source": "/checkout/",
+      "destination": "/checkout/index.html"
+    },
+    {
+      "source": "/checkout/api/config.php",
+      "destination": "/api/config"
+    },
+    {
+      "source": "/checkout/api/transaction.php",
+      "destination": "/api/transaction"
+    },
+    {
+      "source": "/checkout/api/webhook.php",
+      "destination": "/api/webhook"
+    },
+    {
+      "source": "/checkout/api/:path*",
+      "destination": "/api/not-found"
+    }
+  ]
+}

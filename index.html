@@ -20,6 +20,71 @@
   document.head.appendChild(a);
 </script>
 
+<script>
+  (function () {
+    var trackingKeys = ["src", "sck", "xcod", "utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term", "fbclid", "gclid", "ttclid", "msclkid"];
+    function readCookie(name) {
+      var match = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)"));
+      return match ? decodeURIComponent(match[1]) : "";
+    }
+    function writeCookie(name, value, days) {
+      var date = new Date();
+      date.setTime(date.getTime() + days * 864e5);
+      document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + date.toUTCString() + "; path=/; SameSite=Lax";
+    }
+    function readStored(key) {
+      try { return JSON.parse(window[key].getItem("utmify_tracking") || "{}"); } catch (e) { return {}; }
+    }
+    function storeTracking(data) {
+      try { sessionStorage.setItem("utmify_tracking", JSON.stringify(data)); } catch (e) {}
+      try { localStorage.setItem("utmify_tracking", JSON.stringify(data)); } catch (e) {}
+    }
+    function cleanTrackingValue(key, value) {
+      if (!value) return "";
+      var clean = String(value).split("::")[0].trim();
+      if (key === "utm_source") clean = clean.replace(/jLj[0-9a-z_-]{12,}$/i, "").trim();
+      return clean;
+    }
+    function collectTracking() {
+      var params = new URLSearchParams(window.location.search);
+      var data = Object.assign({}, readStored("localStorage"), readStored("sessionStorage"));
+      trackingKeys.forEach(function (key) {
+        var value = cleanTrackingValue(key, params.get(key));
+        if (value) data[key] = value;
+      });
+      if (!data.sck && data.xcod) data.sck = data.xcod;
+      var fbclid = data.fbclid || params.get("fbclid");
+      var fbp = readCookie("_fbp") || data._fbp || data.fbp;
+      var fbc = readCookie("_fbc") || data._fbc || data.fbc;
+      if (!fbc && fbclid) {
+        fbc = "fb.1." + Date.now() + "." + fbclid;
+        writeCookie("_fbc", fbc, 90);
+      }
+      if (fbp) data._fbp = data.fbp = fbp;
+      if (fbc) data._fbc = data.fbc = fbc;
+      storeTracking(data);
+      return data;
+    }
+    function decorateCheckoutLinks() {
+      var search = window.location.search;
+      document.querySelectorAll('a[href="/checkout/"], a[href^="/checkout/?"], a[href^="checkout/"]').forEach(function (link) {
+        var url = new URL(link.getAttribute("href"), window.location.href);
+        if (search) {
+          new URLSearchParams(search).forEach(function (value, key) {
+            if (!url.searchParams.has(key)) url.searchParams.set(key, value);
+          });
+        }
+        link.setAttribute("href", "/checkout/" + url.search);
+      });
+    }
+    window.shop2CollectTracking = collectTracking;
+    collectTracking();
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", decorateCheckoutLinks);
+    else decorateCheckoutLinks();
+    setTimeout(collectTracking, 1500);
+  })();
+</script>
+
 
 	<meta charset="UTF-8">
 	<title>Closet Dobrável Inteligente – Cupons Premiados</title>
@@ -658,7 +723,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 				<div class="elementor-element elementor-element-40de7163 elementor-widget elementor-widget-image"
 					data-id="40de7163" data-element_type="widget" data-widget_type="image.default">
 					<div class="elementor-widget-container">
-						<a href="https://pay.finalize-seucarrinho.xyz/6YQPgjWlq8n3pxz">
+						<a href="/checkout/">
 							<img decoding="async" width="78" height="61" src="images/chat.png"
 								class="attachment-large size-large wp-image-38" alt=""> </a>
 					</div>
@@ -669,7 +734,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 				<div class="elementor-element elementor-element-224fbd elementor-widget elementor-widget-image"
 					data-id="224fbd" data-element_type="widget" data-widget_type="image.default">
 					<div class="elementor-widget-container">
-						<a href="https://pay.finalize-seucarrinho.xyz/6YQPgjWlq8n3pxz">
+						<a href="/checkout/">
 							<img decoding="async" width="76" height="75" src="images/cart.png"
 								class="attachment-large size-large wp-image-37" alt=""> </a>
 					</div>
@@ -682,7 +747,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 					<div class="elementor-widget-container">
 						<div class="elementor-button-wrapper">
 							<a id="clickbotao" class="elementor-button elementor-button-link elementor-size-sm"
-								href="https://pay.finalize-seucarrinho.xyz/6YQPgjWlq8n3pxz">
+								href="/checkout/">
 								<span class="elementor-button-content-wrapper">
 									<span class="elementor-button-text">Comprar agora</span>
 								</span>

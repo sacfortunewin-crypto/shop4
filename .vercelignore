@@ -1,0 +1,6 @@
+*.zip
+**/.DS_Store
+**/.env
+**/.env.*
+tela1/checkout/.index.html.swp
+tela1/checkout/api/**
