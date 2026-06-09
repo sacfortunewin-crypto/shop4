@@ -1,24 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="assets/logo-CW7jmH-H.png"/><link rel="preload" as="image" href="assets/banner-DPUAXTA8.png"/><link rel="preload" as="image" href="assets/card-logo-CrrweNqB.png"/><link rel="preload" as="image" href="assets/pix-logo-BxJX0b8o.png"/><link rel="stylesheet" href="assets/styles-CWs43s2Y.css" data-precedence="default"/><title>Checkout Seguro — Finalize sua compra com desconto</title><meta name="author" content="Lovable"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary"/><meta name="twitter:site" content="@Lovable"/><meta name="twitter:title" content="Checkout"/><meta name="twitter:description" content="Speedy Cart Checkout is a mobile-first e-commerce checkout replica focused on conversion."/><meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/87f348a8-c20c-4eec-b3c8-6c43439729a8/id-preview-91152517--8ab05880-483f-4c6f-b5aa-8d3a48e0d70e.lovable.app-1780163927401.png"/><meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/87f348a8-c20c-4eec-b3c8-6c43439729a8/id-preview-91152517--8ab05880-483f-4c6f-b5aa-8d3a48e0d70e.lovable.app-1780163927401.png"/><meta name="description" content="Checkout marketplace brasileiro com PIX, cartão em até 12x, ambiente seguro e oferta por tempo limitado."/><meta property="og:title" content="Checkout Seguro — Finalize sua compra"/><meta property="og:description" content="Pagamento via PIX ou cartão, ambiente 100% seguro e LGPD."/><link rel="modulepreload" href="assets/index-C5shwS95.js"/><link rel="modulepreload" href="assets/index-7IybtmAl.js"/>
 <script>
-  window.pixelId = "6a274d3ce48a4b3c57d64a89";
-  var a = document.createElement("script");
-  a.setAttribute("async", "");
-  a.setAttribute("defer", "");
-  a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
-  document.head.appendChild(a);
-</script>
-<script>
   (function () {
-    var trackingKeys = ["src", "sck", "xcod", "utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term", "fbclid", "gclid", "ttclid", "msclkid"];
-    function readCookie(name) {
-      var match = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)"));
-      return match ? decodeURIComponent(match[1]) : "";
-    }
-    function writeCookie(name, value, days) {
-      var date = new Date();
-      date.setTime(date.getTime() + days * 864e5);
-      document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + date.toUTCString() + "; path=/; SameSite=Lax";
-    }
+    var trackingKeys = ["src", "sck", "xcod", "utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term"];
     function readStored(key) {
       try { return JSON.parse(window[key].getItem("utmify_tracking") || "{}"); } catch (e) { return {}; }
     }
@@ -40,15 +23,6 @@
         if (value) data[key] = value;
       });
       if (!data.sck && data.xcod) data.sck = data.xcod;
-      var fbclid = data.fbclid || params.get("fbclid");
-      var fbp = readCookie("_fbp") || data._fbp || data.fbp;
-      var fbc = readCookie("_fbc") || data._fbc || data.fbc;
-      if (!fbc && fbclid) {
-        fbc = "fb.1." + Date.now() + "." + fbclid;
-        writeCookie("_fbc", fbc, 90);
-      }
-      if (fbp) data._fbp = data.fbp = fbp;
-      if (fbc) data._fbc = data.fbc = fbc;
       storeTracking(data);
       return data;
     };

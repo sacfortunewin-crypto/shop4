@@ -10,28 +10,9 @@
   async
   defer
 ></script>
-
-<script>
-  window.pixelId = "6a274d3ce48a4b3c57d64a89";
-  var a = document.createElement("script");
-  a.setAttribute("async", "");
-  a.setAttribute("defer", "");
-  a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
-  document.head.appendChild(a);
-</script>
-
 <script>
   (function () {
-    var trackingKeys = ["src", "sck", "xcod", "utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term", "fbclid", "gclid", "ttclid", "msclkid"];
-    function readCookie(name) {
-      var match = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)"));
-      return match ? decodeURIComponent(match[1]) : "";
-    }
-    function writeCookie(name, value, days) {
-      var date = new Date();
-      date.setTime(date.getTime() + days * 864e5);
-      document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + date.toUTCString() + "; path=/; SameSite=Lax";
-    }
+    var trackingKeys = ["src", "sck", "xcod", "utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term"];
     function readStored(key) {
       try { return JSON.parse(window[key].getItem("utmify_tracking") || "{}"); } catch (e) { return {}; }
     }
@@ -53,15 +34,6 @@
         if (value) data[key] = value;
       });
       if (!data.sck && data.xcod) data.sck = data.xcod;
-      var fbclid = data.fbclid || params.get("fbclid");
-      var fbp = readCookie("_fbp") || data._fbp || data.fbp;
-      var fbc = readCookie("_fbc") || data._fbc || data.fbc;
-      if (!fbc && fbclid) {
-        fbc = "fb.1." + Date.now() + "." + fbclid;
-        writeCookie("_fbc", fbc, 90);
-      }
-      if (fbp) data._fbp = data.fbp = fbp;
-      if (fbc) data._fbc = data.fbc = fbc;
       storeTracking(data);
       return data;
     }
@@ -94,8 +66,7 @@
 		href="https://cuponspremiados.site/ofertas/feed/">
 	<link rel="alternate" type="application/rss+xml" title="Feed de comentários para Cupons Premiados »"
 		href="https://cuponspremiados.site/ofertas/comments/feed/">
-	<script async="" src="js/gtm.js"></script>
-	<script>
+<script>
 		window._wpemojiSettings = { "baseUrl": "https:\/\/s.w.org\/images\/core\/emoji\/15.0.3\/72x72\/", "ext": ".png", "svgUrl": "https:\/\/s.w.org\/images\/core\/emoji\/15.0.3\/svg\/", "svgExt": ".svg", "source": { "concatemoji": "https:\/\/cuponspremiados.site\/ofertas\/wp-includes\/js\/wp-emoji-release.min.js?ver=6.6.2" } };
 		/*! This file is auto-generated */
 		!function (i, n) { var o, s, e; function c(e) { try { var t = { supportTests: e, timestamp: (new Date).valueOf() }; sessionStorage.setItem(o, JSON.stringify(t)) } catch (e) { } } function p(e, t, n) { e.clearRect(0, 0, e.canvas.width, e.canvas.height), e.fillText(t, 0, 0); var t = new Uint32Array(e.getImageData(0, 0, e.canvas.width, e.canvas.height).data), r = (e.clearRect(0, 0, e.canvas.width, e.canvas.height), e.fillText(n, 0, 0), new Uint32Array(e.getImageData(0, 0, e.canvas.width, e.canvas.height).data)); return t.every(function (e, t) { return e === r[t] }) } function u(e, t, n) { switch (t) { case "flag": return n(e, "\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f", "\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f") ? !1 : !n(e, "\ud83c\uddfa\ud83c\uddf3", "\ud83c\uddfa\u200b\ud83c\uddf3") && !n(e, "\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f", "\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f"); case "emoji": return !n(e, "\ud83d\udc26\u200d\u2b1b", "\ud83d\udc26\u200b\u2b1b") }return !1 } function f(e, t, n) { var r = "undefined" != typeof WorkerGlobalScope && self instanceof WorkerGlobalScope ? new OffscreenCanvas(300, 150) : i.createElement("canvas"), a = r.getContext("2d", { willReadFrequently: !0 }), o = (a.textBaseline = "top", a.font = "600 32px Arial", {}); return e.forEach(function (e) { o[e] = t(a, e, n) }), o } function t(e) { var t = i.createElement("script"); t.src = e, t.defer = !0, i.head.appendChild(t) } "undefined" != typeof Promise && (o = "wpEmojiSettingsSupports", s = ["flag", "emoji"], n.supports = { everything: !0, everythingExceptFlag: !0 }, e = new Promise(function (e) { i.addEventListener("DOMContentLoaded", e, { once: !0 }) }), new Promise(function (t) { var n = function () { try { var e = JSON.parse(sessionStorage.getItem(o)); if ("object" == typeof e && "number" == typeof e.timestamp && (new Date).valueOf() < e.timestamp + 604800 && "object" == typeof e.supportTests) return e.supportTests } catch (e) { } return null }(); if (!n) { if ("undefined" != typeof Worker && "undefined" != typeof OffscreenCanvas && "undefined" != typeof URL && URL.createObjectURL && "undefined" != typeof Blob) try { var e = "postMessage(" + f.toString() + "(" + [JSON.stringify(s), u.toString(), p.toString()].join(",") + "));", r = new Blob([e], { type: "text/javascript" }), a = new Worker(URL.createObjectURL(r), { name: "wpTestEmojiSupports" }); return void (a.onmessage = function (e) { c(n = e.data), a.terminate(), t(n) }) } catch (e) { } c(n = f(s, u, p)) } t(n) }).then(function (e) { for (var t in e) n.supports[t] = e[t], n.supports.everything = n.supports.everything && n.supports[t], "flag" !== t && (n.supports.everythingExceptFlag = n.supports.everythingExceptFlag && n.supports[t]); n.supports.everythingExceptFlag = n.supports.everythingExceptFlag && !n.supports.flag, n.DOMReady = !1, n.readyCallback = function () { n.DOMReady = !0 } }).then(function () { return e }).then(function () { var e; n.supports.everything || (n.readyCallback(), (e = n.source || {}).concatemoji ? t(e.concatemoji) : e.wpemoji && e.twemoji && (t(e.twemoji), t(e.wpemoji))) })) }((window, document), window._wpemojiSettings);
@@ -710,11 +681,7 @@
 
 <body
 	class="page-template page-template-elementor_canvas page page-id-20 theme-hello-elementor woocommerce-js elementor-default elementor-template-canvas elementor-kit-5 elementor-page elementor-page-20">
-	<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N3ZG8PHS"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-	<div data-elementor-type="wp-page" data-elementor-id="20" class="elementor elementor-20"
+<div data-elementor-type="wp-page" data-elementor-id="20" class="elementor elementor-20"
 		data-elementor-post-type="page">
 		<div class="elementor-element elementor-element-20800a52 e-con-full e-flex e-con e-parent e-lazyloaded"
 			data-id="20800a52" data-element_type="container" data-settings="{" position":"fixed"}"="">
@@ -2215,8 +2182,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 				</div>
 			</div>
 			<div style="margin-left: -8px;" >
-
-
 
 
 					<img src="https://acdn.mitiendanube.com/assets/themes/recife/static/images/empty-placeholder.png"
