@@ -18,12 +18,24 @@
       "destination": "/api/transaction"
     },
     {
+      "source": "/checkout/api/status.php",
+      "destination": "/api/status"
+    },
+    {
       "source": "/checkout/api/webhook.php",
       "destination": "/api/webhook"
     },
     {
       "source": "/checkout/api/:path*",
       "destination": "/api/not-found"
+    },
+    {
+      "source": "/obrigado",
+      "destination": "/obrigado/index.html"
+    },
+    {
+      "source": "/obrigado/",
+      "destination": "/obrigado/index.html"
     }
   ]
 }
