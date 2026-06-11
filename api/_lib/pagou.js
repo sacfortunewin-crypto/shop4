@@ -44,6 +44,8 @@ const localEnv = (() => {
 
 const seenEvents = globalThis.__pagouSeenEvents || new Map();
 globalThis.__pagouSeenEvents = seenEvents;
+const orderSnapshots = globalThis.__pagouOrderSnapshots || new Map();
+globalThis.__pagouOrderSnapshots = orderSnapshots;
 
 function env(key, fallback = "") {
   return process.env[key] || localEnv[key] || fallback;
@@ -117,9 +119,56 @@ function hostFromRequest(req) {
   return Array.isArray(host) ? host[0] : String(host || "");
 }
 
-function webhookUrl(req) {
+function base64UrlEncode(value) {
+  return Buffer.from(value).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlDecode(value) {
+  const normalized = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  return Buffer.from(padded, "base64").toString("utf8");
+}
+
+function trackingToken(tracking) {
+  const normalized = normalizeTracking(tracking || {});
+  if (!hasTrackingValues(normalized)) return "";
+  return base64UrlEncode(JSON.stringify(normalized));
+}
+
+function trackingFromToken(value) {
+  if (!value) return normalizeTracking({});
+  try {
+    return normalizeTracking(JSON.parse(base64UrlDecode(value)));
+  } catch {
+    return normalizeTracking({});
+  }
+}
+
+function appendTrackingToWebhookUrl(rawUrl, tracking) {
+  const token = trackingToken(tracking);
+  if (!rawUrl || !token) return rawUrl || "";
+
+  try {
+    const url = new URL(rawUrl);
+    url.searchParams.set("t", token);
+    return url.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
+function trackingFromWebhookUrl(req) {
+  try {
+    const url = new URL(req.url || "/api/webhook", "https://checkout.local");
+    return trackingFromToken(url.searchParams.get("t"));
+  } catch {
+    return normalizeTracking({});
+  }
+}
+
+function webhookUrl(req, tracking) {
   const configured = env("PAGOU_NOTIFY_URL");
-  if (configured) return configured;
+  if (configured) return appendTrackingToWebhookUrl(configured, tracking);
 
   const host = hostFromRequest(req);
   if (!host || /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(host)) return "";
@@ -127,7 +176,7 @@ function webhookUrl(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
   const secret = env("PAGOU_WEBHOOK_SECRET");
   const suffix = secret ? `?secret=${encodeURIComponent(secret)}` : "";
-  return `${proto}://${host}/checkout/api/webhook.php${suffix}`;
+  return appendTrackingToWebhookUrl(`${proto}://${host}/checkout/api/webhook.php${suffix}`, tracking);
 }
 
 function selectedAmountCents(input) {
@@ -161,6 +210,155 @@ function normalizeTracking(input) {
     utm_medium: cleanTrackingText(tracking.utm_medium),
     utm_content: cleanTrackingText(tracking.utm_content),
     utm_term: cleanTrackingText(tracking.utm_term),
+  };
+}
+
+function hasTrackingValues(tracking) {
+  return Object.values(normalizeTracking(tracking || {})).some(Boolean);
+}
+
+function trackingSummary(tracking) {
+  const normalized = normalizeTracking(tracking || {});
+  return {
+    src: normalized.src || null,
+    sck: normalized.sck ? "present" : null,
+    utm_source: normalized.utm_source || null,
+    utm_campaign: normalized.utm_campaign || null,
+    utm_medium: normalized.utm_medium || null,
+    utm_content: normalized.utm_content || null,
+    utm_term: normalized.utm_term || null,
+  };
+}
+
+function mergeTracking(primary, fallback) {
+  const current = normalizeTracking(primary || {});
+  const saved = normalizeTracking(fallback || {});
+  return {
+    src: current.src || saved.src,
+    sck: current.sck || saved.sck,
+    utm_source: current.utm_source || saved.utm_source,
+    utm_campaign: current.utm_campaign || saved.utm_campaign,
+    utm_medium: current.utm_medium || saved.utm_medium,
+    utm_content: current.utm_content || saved.utm_content,
+    utm_term: current.utm_term || saved.utm_term,
+  };
+}
+
+function parseCookieHeader(header) {
+  const cookies = {};
+  String(header || "")
+    .split(";")
+    .forEach((part) => {
+      const index = part.indexOf("=");
+      if (index === -1) return;
+      const key = part.slice(0, index).trim();
+      if (!key) return;
+      cookies[key] = part.slice(index + 1).trim();
+    });
+  return cookies;
+}
+
+function trackingFromSearch(searchParams) {
+  const input = {};
+  for (const key of ["src", "sck", "xcod", "utm_source", "utm_campaign", "utm_medium", "utm_content", "utm_term"]) {
+    const value = searchParams.get(key);
+    if (value) input[key] = value;
+  }
+  return normalizeTracking(input);
+}
+
+function trackingFromCookie(req) {
+  const cookies = parseCookieHeader(req.headers.cookie);
+  const raw = cookies.utmify_tracking || cookies.checkout_tracking;
+  if (!raw) return normalizeTracking({});
+
+  try {
+    return normalizeTracking(JSON.parse(decodeURIComponent(raw)));
+  } catch {
+    return normalizeTracking({});
+  }
+}
+
+function trackingFromReferer(req) {
+  const referer = req.headers.referer || req.headers.referrer;
+  if (!referer) return normalizeTracking({});
+
+  try {
+    return trackingFromSearch(new URL(String(referer)).searchParams);
+  } catch {
+    return normalizeTracking({});
+  }
+}
+
+function trackingFromRequest(req) {
+  return mergeTracking(trackingFromCookie(req), trackingFromReferer(req));
+}
+
+function refererInfo(req) {
+  const referer = req.headers.referer || req.headers.referrer;
+  if (!referer) {
+    return {
+      present: false,
+      origin: null,
+      pathname: null,
+      hasSearch: false,
+      trackingFound: false,
+      tracking: trackingSummary({}),
+    };
+  }
+
+  try {
+    const url = new URL(String(referer));
+    const tracking = trackingFromSearch(url.searchParams);
+    return {
+      present: true,
+      origin: url.origin || null,
+      pathname: url.pathname || null,
+      hasSearch: Boolean(url.search),
+      trackingFound: hasTrackingValues(tracking),
+      tracking: trackingSummary(tracking),
+    };
+  } catch {
+    return {
+      present: true,
+      origin: null,
+      pathname: null,
+      hasSearch: false,
+      trackingFound: false,
+      tracking: trackingSummary({}),
+    };
+  }
+}
+
+function cookieTrackingInfo(req) {
+  const cookies = parseCookieHeader(req.headers.cookie);
+  const tracking = trackingFromCookie(req);
+  return {
+    hasCookieHeader: Boolean(req.headers.cookie),
+    hasUtmifyCookie: Boolean(cookies.utmify_tracking),
+    hasCheckoutCookie: Boolean(cookies.checkout_tracking),
+    trackingFound: hasTrackingValues(tracking),
+    tracking: trackingSummary(tracking),
+  };
+}
+
+function trackingDiagnostics(inputTracking, req) {
+  const bodyTracking = normalizeTracking(inputTracking || {});
+  const cookieInfo = cookieTrackingInfo(req);
+  const refInfo = refererInfo(req);
+  const requestTracking = trackingFromRequest(req);
+  const mergedTracking = mergeTracking(inputTracking, requestTracking);
+
+  return {
+    bodyTrackingFound: hasTrackingValues(bodyTracking),
+    cookieTrackingFound: cookieInfo.trackingFound,
+    refererTrackingFound: refInfo.trackingFound,
+    requestTrackingFound: hasTrackingValues(requestTracking),
+    mergedTrackingFound: hasTrackingValues(mergedTracking),
+    bodyTracking: trackingSummary(bodyTracking),
+    cookie: cookieInfo,
+    referer: refInfo,
+    mergedTracking: trackingSummary(mergedTracking),
   };
 }
 
@@ -227,7 +425,7 @@ function buildTransactionPayload(input, req, res) {
   const address = input.address;
   const amountCents = selectedAmountCents(input);
   const shippingCents = Math.max(0, amountCents - CHECKOUT_PRODUCT_PRICE_CENTS);
-  const tracking = normalizeTracking(input.tracking);
+  const tracking = mergeTracking(input.tracking, trackingFromRequest(req));
   const createdAt = new Date().toISOString();
   const externalRef = `checkout_${new Date().toISOString().replace(/\D/g, "").slice(0, 14)}_${crypto
     .randomBytes(4)
@@ -291,7 +489,7 @@ function buildTransactionPayload(input, req, res) {
   const ip = clientIp(req);
   if (ip) payload.ip_address = ip;
 
-  const notifyUrl = webhookUrl(req);
+  const notifyUrl = webhookUrl(req, tracking);
   if (notifyUrl.startsWith("https://")) payload.notify_url = notifyUrl;
 
   if (method === "credit_card") {
@@ -504,6 +702,10 @@ function cleanupSeenEvents() {
   for (const [key, seenAt] of seenEvents.entries()) {
     if (now - seenAt > 1000 * 60 * 60) seenEvents.delete(key);
   }
+
+  for (const [key, snapshot] of orderSnapshots.entries()) {
+    if (!snapshot || now - snapshot.seenAt > 1000 * 60 * 60 * 6) orderSnapshots.delete(key);
+  }
 }
 
 function hasSeenEvent(eventId) {
@@ -518,9 +720,90 @@ function markEventSeen(eventId) {
   seenEvents.set(eventId, Date.now());
 }
 
+function snapshotKeys(orderOrTransaction) {
+  if (!orderOrTransaction || typeof orderOrTransaction !== "object") return [];
+
+  const metadata = parseMetadata(orderOrTransaction);
+  const checkoutOrder = metadata.checkoutOrder || {};
+  const keys = [
+    orderOrTransaction.externalRef,
+    orderOrTransaction.external_ref,
+    orderOrTransaction.correlation_id,
+    orderOrTransaction.correlationId,
+    orderOrTransaction.transactionId,
+    orderOrTransaction.id,
+    checkoutOrder.externalRef,
+    checkoutOrder.transactionId,
+  ]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+
+  return [...new Set(keys)];
+}
+
+function rememberOrderSnapshot(order) {
+  if (!order || typeof order !== "object") return;
+  cleanupSeenEvents();
+
+  const snapshot = {
+    seenAt: Date.now(),
+    order: {
+      ...order,
+      customer: { ...(order.customer || {}) },
+      tracking: normalizeTracking(order.tracking || {}),
+    },
+  };
+
+  for (const key of snapshotKeys(order)) {
+    orderSnapshots.set(key, snapshot);
+  }
+}
+
+function orderSnapshotFromTransaction(transaction) {
+  cleanupSeenEvents();
+  for (const key of snapshotKeys(transaction)) {
+    const snapshot = orderSnapshots.get(key);
+    if (snapshot && snapshot.order) return snapshot.order;
+  }
+
+  return null;
+}
+
+function mergeOrderWithSnapshot(order, snapshot) {
+  if (!snapshot) return order;
+  return {
+    ...snapshot,
+    ...order,
+    customer: {
+      ...(snapshot.customer || {}),
+      ...(order.customer || {}),
+    },
+    tracking: mergeTracking(order.tracking || {}, snapshot.tracking || {}),
+  };
+}
+
+function responseMessage(body) {
+  if (!body || typeof body !== "object") return null;
+  const firstError = Array.isArray(body.errors) ? body.errors[0] : null;
+  return (
+    body.message ||
+    body.detail ||
+    body.error ||
+    body.title ||
+    (firstError && (firstError.message || firstError.detail || firstError.error || String(firstError))) ||
+    null
+  );
+}
+
 async function notifyUtmify(order, transaction) {
   const token = env("UTMIFY_API_TOKEN");
-  if (!token) return { sent: false, status: 0, message: "UTMify nao configurado." };
+  if (!token) {
+    console.log("[checkout:utmify-skip]", {
+      reason: "missing_token",
+      orderId: order && (order.externalRef || order.transactionId) ? order.externalRef || order.transactionId : null,
+    });
+    return { sent: false, status: 0, message: "UTMify nao configurado." };
+  }
 
   const pagouStatus = String(transaction.status || "pending");
   const eventType = String(transaction.event_type || "");
@@ -571,6 +854,33 @@ async function notifyUtmify(order, transaction) {
     isTest: checkoutEnvironment() === "sandbox",
   };
 
+  console.log("[checkout:utmify-request]", {
+    orderId: payload.orderId || null,
+    transactionId: transaction.id || order.transactionId || null,
+    paymentMethod: payload.paymentMethod,
+    pagouStatus,
+    eventType: eventType || null,
+    utmifyStatus: status,
+    amountCents,
+    feeCents,
+    userCommissionCents,
+    trackingFound: hasTrackingValues(tracking),
+    tracking: trackingSummary(tracking),
+    customer: {
+      namePresent: Boolean(customer.name),
+      emailPresent: Boolean(customer.email),
+      phonePresent: Boolean(customer.phone),
+      documentPresent: Boolean(customer.document),
+      ipPresent: Boolean(customer.ip),
+    },
+    dates: {
+      createdAt: payload.createdAt || null,
+      approvedDate: payload.approvedDate || null,
+      refundedAt: payload.refundedAt || null,
+    },
+    isTest: payload.isTest,
+  });
+
   let response;
   try {
     response = await fetch("https://api.utmify.com.br/api-credentials/orders", {
@@ -583,6 +893,11 @@ async function notifyUtmify(order, transaction) {
       body: JSON.stringify(payload),
     });
   } catch (error) {
+    console.log("[checkout:utmify-network-error]", {
+      orderId: payload.orderId || null,
+      transactionId: transaction.id || order.transactionId || null,
+      message: error && error.message ? error.message : "Falha de comunicacao com a UTMify.",
+    });
     return {
       sent: false,
       status: 0,
@@ -598,6 +913,15 @@ async function notifyUtmify(order, transaction) {
     body = { raw };
   }
 
+  console.log("[checkout:utmify-response]", {
+    orderId: payload.orderId || null,
+    transactionId: transaction.id || order.transactionId || null,
+    sent: response.status >= 200 && response.status < 300,
+    status: response.status,
+    message: responseMessage(body),
+    bodyKeys: body && typeof body === "object" ? Object.keys(body).slice(0, 12) : [],
+  });
+
   return {
     sent: response.status >= 200 && response.status < 300,
     status: response.status,
@@ -612,14 +936,23 @@ module.exports = {
   buildTransactionPayload,
   env,
   errorMessage,
+  hasTrackingValues,
   hasSeenEvent,
   markEventSeen,
+  mergeTracking,
+  mergeOrderWithSnapshot,
   normalizeTransactionFromWebhook,
   notifyUtmify,
+  orderSnapshotFromTransaction,
   orderFromTransaction,
   pagouApiRequest,
   readJson,
+  rememberOrderSnapshot,
   requireMethod,
   sendJson,
   checkoutEnvironment,
+  trackingDiagnostics,
+  trackingFromRequest,
+  trackingFromWebhookUrl,
+  trackingSummary,
 };

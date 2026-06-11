@@ -21,6 +21,7 @@
     var transaction = transactionData(payload);
     return {
       transactionId: String(payload.transactionId || transaction.id || transaction.transactionId || ""),
+      externalRef: String(payload.externalRef || payload.external_ref || transaction.externalRef || transaction.external_ref || ""),
       status: String(payload.status || transaction.status || "").toLowerCase(),
       method: String(payload.method || transaction.method || (requestData && requestData.method) || "").toLowerCase(),
       amount: Number(payload.amount || transaction.amount || (requestData && requestData.amountCents) || 0),
@@ -65,8 +66,11 @@
 
   async function checkStatus(payment) {
     try {
+      var statusUrl = new URL("/checkout/api/status.php", window.location.origin);
+      statusUrl.searchParams.set("transactionId", payment.transactionId);
+      if (payment.externalRef) statusUrl.searchParams.set("externalRef", payment.externalRef);
       var response = await originalFetch(
-        "/checkout/api/status.php?transactionId=" + encodeURIComponent(payment.transactionId),
+        statusUrl.pathname + statusUrl.search,
         { headers: { Accept: "application/json" }, cache: "no-store" }
       );
       if (!response.ok) return;
@@ -74,6 +78,7 @@
       var current = normalizedPayment(await response.json(), payment);
       current.method = current.method || payment.method;
       current.amount = current.amount || payment.amount;
+      current.externalRef = current.externalRef || payment.externalRef;
 
       if (APPROVED_STATUSES.has(current.status)) {
         redirectToThanks(current);

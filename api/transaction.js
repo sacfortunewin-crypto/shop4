@@ -1,12 +1,16 @@
 const {
   buildTransactionPayload,
   errorMessage,
+  hasTrackingValues,
   notifyUtmify,
   orderFromTransaction,
   pagouApiRequest,
   readJson,
+  rememberOrderSnapshot,
   requireMethod,
   sendJson,
+  trackingDiagnostics,
+  trackingSummary,
 } = require("./_lib/pagou");
 
 function utmifyLogMessage(utmify) {
@@ -41,8 +45,41 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  console.log("[checkout:transaction-received]", {
+    method: input && input.method ? input.method : "pix",
+    requestedAmountCents: input && input.amountCents ? Number(input.amountCents) : null,
+    productId: input && input.productId ? String(input.productId) : null,
+    shippingSelected: input && input.amountCents ? Number(input.amountCents) > 8990 : null,
+    hasCustomer: Boolean(input && input.customer),
+    hasAddress: Boolean(input && input.address),
+    customerPresence: {
+      name: Boolean(input && input.customer && input.customer.name),
+      email: Boolean(input && input.customer && input.customer.email),
+      phone: Boolean(input && input.customer && input.customer.phone),
+      cpf: Boolean(input && input.customer && input.customer.cpf),
+    },
+    addressPresence: {
+      cep: Boolean(input && input.address && input.address.cep),
+      city: Boolean(input && input.address && input.address.city),
+      state: Boolean(input && input.address && input.address.state),
+    },
+    trackingDiagnostics: trackingDiagnostics(input && input.tracking, req),
+  });
+
   const payload = buildTransactionPayload(input, req, res);
   if (!payload) return;
+
+  console.log("[checkout:pagou-request]", {
+    method: payload.method || null,
+    externalRef: payload.external_ref || null,
+    amount: payload.amount || null,
+    currency: payload.currency || null,
+    notifyUrlConfigured: Boolean(payload.notify_url),
+    notifyTrackingTokenConfigured: Boolean(payload.notify_url && /[?&]t=/.test(payload.notify_url)),
+    tokenPresent: Boolean(payload.token),
+    installments: payload.installments || null,
+    metadataPresent: Boolean(payload.metadata),
+  });
 
   const response = await pagouApiRequest("POST", "/v2/transactions", payload);
   const body = response.body || {};
@@ -68,6 +105,19 @@ module.exports = async function handler(req, res) {
 
   const data = body.data && typeof body.data === "object" ? body.data : body;
   const transactionId = data.id || body.transactionId || null;
+  console.log("[checkout:pagou-response]", {
+    pagouHttpStatus: response.status,
+    requestId: body.requestId || null,
+    transactionId,
+    externalRef: data.external_ref || payload.external_ref || null,
+    method: data.method || payload.method || null,
+    pagouStatus: data.status || null,
+    amount: data.amount || payload.amount || null,
+    metadataReturned: Boolean(data.metadata),
+    pixReturned: Boolean(data.pix),
+    nextActionReturned: Boolean(data.next_action),
+  });
+
   const transaction = {
     ...data,
     id: transactionId || data.id,
@@ -79,7 +129,24 @@ module.exports = async function handler(req, res) {
     metadata: data.metadata || payload.metadata,
   };
   const order = orderFromTransaction(transaction, req);
+  rememberOrderSnapshot(order);
   const tracking = order.tracking || {};
+  console.log("[checkout:order-built]", {
+    transactionId,
+    externalRef: order.externalRef || null,
+    method: order.method || null,
+    amountCents: order.amountCents || null,
+    trackingFound: hasTrackingValues(tracking),
+    tracking: trackingSummary(tracking),
+    customerPresence: {
+      name: Boolean(order.customer && order.customer.name),
+      email: Boolean(order.customer && order.customer.email),
+      phone: Boolean(order.customer && order.customer.phone),
+      document: Boolean(order.customer && order.customer.document),
+      ip: Boolean(order.customer && order.customer.ip),
+    },
+  });
+
   const utmify = await notifyUtmify(order, transaction);
   console.log("[checkout:utmify-pending]", {
     transactionId,
@@ -87,15 +154,8 @@ module.exports = async function handler(req, res) {
     method: transaction.method || null,
     pagouStatus: transaction.status || null,
     amount: transaction.amount || null,
-    tracking: {
-      src: tracking.src || null,
-      sck: tracking.sck ? "present" : null,
-      utm_source: tracking.utm_source || null,
-      utm_campaign: tracking.utm_campaign || null,
-      utm_medium: tracking.utm_medium || null,
-      utm_content: tracking.utm_content || null,
-      utm_term: tracking.utm_term || null,
-    },
+    trackingFound: hasTrackingValues(tracking),
+    tracking: trackingSummary(tracking),
     utmifySent: Boolean(utmify && utmify.sent),
     utmifyStatus: utmify ? utmify.status : null,
     utmifyMessage: utmifyLogMessage(utmify),
@@ -106,6 +166,7 @@ module.exports = async function handler(req, res) {
 
     sendJson(res, 200, {
       transactionId,
+      externalRef: transaction.external_ref || null,
       status: data.status || null,
       method: data.method || "pix",
       amount: data.amount || payload.amount,
@@ -127,6 +188,7 @@ module.exports = async function handler(req, res) {
     data,
     ...data,
     transactionId,
+    externalRef: transaction.external_ref || null,
     requestId: body.requestId || null,
     utmify,
     transaction: data,

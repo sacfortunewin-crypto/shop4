@@ -3,6 +3,7 @@
 
 <head>
 
+<script src="/tracking.js"></script>
 <script
   src="https://cdn.utmify.com.br/scripts/utms/latest.js"
   data-utmify-prevent-xcod-sck
@@ -27,6 +28,10 @@
     function storeTracking(data) {
       try { sessionStorage.setItem("utmify_tracking", JSON.stringify(data)); } catch (e) {}
       try { localStorage.setItem("utmify_tracking", JSON.stringify(data)); } catch (e) {}
+      try {
+        var secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = "utmify_tracking=" + encodeURIComponent(JSON.stringify(data)) + "; Max-Age=2592000; Path=/; SameSite=Lax" + secure;
+      } catch (e) {}
     }
     function cleanTrackingValue(key, value) {
       if (!value) return "";

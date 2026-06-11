@@ -22,6 +22,10 @@
       "destination": "/api/status"
     },
     {
+      "source": "/checkout/api/client-log.php",
+      "destination": "/api/client-log"
+    },
+    {
       "source": "/checkout/api/webhook.php",
       "destination": "/api/webhook"
     },
